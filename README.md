@@ -31,3 +31,6 @@ Here is will describe the Version 1 code as it is meant to replace Version 0. Af
 
 ## Future of the Code
 I am not a coder, so my code is messy. I would be happy for a savy coder to come along and clean up this work and maybe create more elegant classes. For SNF users, eventually I want there to be enough data that this tool can take in recipe settings (i.e. gas composition and bias voltage) and interpolate horizontal and vertical etch rates. 
+
+## Contact:
+ncastano@stanford.edu
