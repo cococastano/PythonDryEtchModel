@@ -242,7 +242,9 @@ def make_grid(containers,cell_size):
         point_count = 0
         pts = np.array([])
         if type(container) == set: container = list(container)
+        n_pts = len(container)
         for i_cell, cell_center in enumerate(container):
+            if i_cell%1000 == 0: print('building cell %i of %i' %(i_cell,n_pts))
             cells.append(8)
             for p in range(8):
                 cells.append(point_count)
@@ -400,7 +402,7 @@ def compute_normals(points, use_nn=False, flat=False,
 #    ax = fig.add_subplot(111, projection='3d')
     if type(points) == dict:
         pts = [list(cell) for cell in points]
-        cloud = make_cloud([exposed_cells])[0]
+        cloud = make_cloud([points])[0]
         cloud = np.vstack((cloud,pts))
         knns = NearestNeighbors(n_neighbors=use_nn).fit(cloud)
         dists, indices = knns.kneighbors(cloud, return_distance=True)
@@ -424,7 +426,7 @@ def compute_normals(points, use_nn=False, flat=False,
             unit_norms[pt] = unit_norm
             
     elif points.shape[0] == 3:
-        cloud = make_cloud([exposed_cells])[0]
+        cloud = make_cloud([points])[0]
         knns = NearestNeighbors(n_neighbors=use_nn).fit(cloud)
         dists, indices = knns.kneighbors(cloud, return_distance=True)
         pt_i = np.where((cloud[:,0] == points[0]) & (cloud[:,1] == points[1]) 
@@ -577,12 +579,19 @@ def compute_normals_for_cells(exposed_cells,removed_cells,
                                 normal_vect[1] += round(y_v - y,3)
                                 normal_vect[2] += round(z_v - z,3)
             if np.linalg.norm(normal_vect) == 0: 
+                # if this happens it is a point in space with a spehere of 
+                # neighbors making the normal_vect magnitude 0 so jus assign a 
+                # dummy normal
+                normal_vects[cell] = np.array([1,0,0])
                 alt_method_flag = True
-                alt_method_points[cell] = []
             else:
                 normal_vects[cell] = (normal_vect / np.linalg.norm(normal_vect))
     if alt_method_flag == True:
-        alt_method_points = compute_normals(alt_method_points, use_nn=8)
+        print('COMPUTING NORMAL W/ PT CLOUD')
+        try:
+            alt_method_points = compute_normals(alt_method_points, use_nn=5)
+        except:
+            print('\tEXCEPTION')
     
     print('\t\t\tassigning normals to %i cells' % n_normals)
     for cell in list(exposed_cells.keys()):

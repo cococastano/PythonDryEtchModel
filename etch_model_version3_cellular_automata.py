@@ -60,15 +60,16 @@ order in which it was created:
 #recipe_steps = {'step01':{'bosch':15,'iso':100,'cycles':7},
 ##                'step02':{'bosch':300,'iso':None,'cycles':300},
 #                'step03':{'bosch':None,'iso':100,'cycles':1}}
-recipe_steps = {'step01':{'bosch':20,'iso':125,'cycles':7},
+recipe_steps = {'step01':{'bosch':15,'iso':100,'cycles':4},
 #                'step02':{'bosch':300,'iso':None,'cycles':300},
-                'step03':{'bosch':None,'iso':100,'cycles':1}}
+                'step03':{'bosch':None,'iso':800,'cycles':1}}
 
 
 # load mask
 im_dir = 'C:/Users/nicas/Documents/E241-MicroNanoFab/masks/'
-im_file = 'mask5_R5_C3_v0.png'
-pixel_um_conv = 49.291/80.4384
+im_file = 'python_model_fil_sq.png'
+pixel_um_conv = 276/100  # px/um
+gap = 249/pixel_um_conv
 # 151.37/100  # for R2_C2
 # for R5_C3: 49.291/80.4384  # px/um
 
@@ -85,7 +86,7 @@ dummy_i = im_file.find('.png')
 out_file = im_dir + im_file[:dummy_i] + '_out' + im_file[dummy_i:]
 cv2.imwrite(out_file, conts_im)
 
-cell_size = 5 # microns
+cell_size = 8 # microns
 wafer_thickness = 500  # microns
 
 t_start = 0 # seconds
@@ -102,13 +103,19 @@ horiz_to_vert_rate_ratio = 0.6
 def vert_rate(z):
     a = 0.141
     b = 0.0007
-    return a*np.exp(-b*z)
+#    return a*np.exp(-b*z)
+    return (0.14-0.02) + z*(0.03/500)
+#    d = a*np.exp(-b*z)
+#    return d + d/2* np.cos(z * 2*np.pi/10)
 def horiz_rate(z):
-    return 0.8#0.8*vert_rate(z)
+    r = (0.65-0.1)+z*(0.1/500)
+    return r*vert_rate(z)
+#    return 0.6 + 0.2* np.cos(z * 2*np.pi/10)
 
 #vert_rate = 8.5/60  # um/s
 def bosch_vert_step(z):
-    return 0.84 - 0.1/500*z
+    return (0.84-0.1) + 0.1/500*z
+#    return 0.84 + 0.4* np.cos(z * 2*np.pi/10)
     
 #bosch_vert_step = 0.84  # um/step
 
@@ -268,8 +275,10 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 #ax = plt.subplot(111,projection='polar')
 plot_flag = True
-
+#
+#dummy_steps = loop_steps[loop_steps.index(step)-1:]
 for step_i, step in enumerate(loop_steps,start=1):
+#for step_i, step in enumerate(dummy_steps,start=loop_steps.index(step)):
     
     #plot some results
     if step_i % (int(len(loop_steps)/10)) == 0:
@@ -616,7 +625,7 @@ for ind,step in enumerate(select_data):#range(20):
 
 ######
 
-pts = etch_grid[loop_steps[-1]][0]
+pts = etch_grid['step03_iso01_isotime520']#loop_steps[-1]][0]
 states = etch_grid[loop_steps[-1]][1]
 iden = etch_grid[loop_steps[-1]][2]
 
@@ -653,13 +662,15 @@ plotter.add_mesh(neigh_obj, show_edges=True,
 plotter.add_scalar_bar(title='z_height',height=0.08,width=0.4,
                        position_x=0.01,position_y=0.1)
    
+pts = etch_grid[loop_steps[-1]][0]
 
-   
-cells = np.asarray(exposed_cells.points)
-#obj = make_grid([cells],cell_size)
+pts = etch_grid['step03_iso01_isotime520'][0]#loop_steps[-1]][0]   
+#cells = np.asarray(exposed_cells.points)
+obj = make_grid([pts],cell_size)
 
-obj = pv.read('C:/Users/nicas/Documents/E241-MicroNanoFab/codes/etch_model_version5_1/neigh_obj.vtk')
-obj = make_grid([np.array(obj.points)],cell_size)
+#obj = pv.read('C:/Users/nicas/Documents/E241-MicroNanoFab/codes/etch_model_version5_1/exposed_obj.vtk')
+#obj = make_grid([np.array(obj.points)],cell_size)
+
 slices = obj.slice(normal=[1,1,0])
 plotter = pv.BackgroundPlotter(window_size=[1024, 768])
 plotter.add_mesh(obj, show_edges=False,
