@@ -22,6 +22,14 @@ pip install vtk
 pip install opencv-python
 ```
 
+numpy >= 1.19.2
+pyvista >= 0.27.4
+matplotlib >= 3.3.4
+cv2 >= 4.4.0
+scipy >= 1.5.2
+shapely >= 1.6.4
+
+
 ## Process Flow
 Most input expected from the user is specified in the top sections of the code. Most notably the path to a etch mask is required. This is a binary .png file (example shown below). <br/>
 
